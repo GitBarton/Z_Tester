@@ -4,6 +4,7 @@ import static com.birto.z_jar_getpath.Main.fileSeparator;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.JarURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -21,11 +22,11 @@ import java.security.CodeSource;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.jar.JarFile;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import org.apache.commons.io.FileUtils;
 
 
 public class Main {
@@ -41,15 +42,27 @@ public class Main {
     
     public static void main(String[] args) throws URISyntaxException, IOException {
  
-  Map<String, String> foldertoAdd = new HashMap<String, String>();
-  foldertoAdd.put(ACTIVEDOCS, jarPath + fileSeparator + ACTIVEDOCS + fileSeparator);
-  foldertoAdd.put(INDEX, jarPath + fileSeparator + INDEX + fileSeparator);
-  foldertoAdd.put(JOURNAL, jarPath + fileSeparator + JOURNAL + fileSeparator);
+  //Map<String, String> foldertoAdd = new HashMap<String, String>();
+  //foldertoAdd.put(ACTIVEDOCS, jarPath + fileSeparator + ACTIVEDOCS + fileSeparator);
+  //foldertoAdd.put(INDEX, jarPath + fileSeparator + INDEX + fileSeparator);
+  //foldertoAdd.put(JOURNAL, jarPath + fileSeparator + JOURNAL + fileSeparator);
   //Debug  //     JOptionPane.showMessageDialog(null, foldertoAdd.get(ACTIVEDOCS) + foldertoAdd.get(INDEX) + foldertoAdd.get(JOURNAL), "activeDocs +  index + journal", 1);       
         
 
 //JarPath
- jarPath = getJarLaunchPath();   /*file:/C:/Java/Z_Jar_getPath/target/Z_Jar_getPath-1.0-jar-with-dependencies.jar */      System.out.println("our separator is : " + fileSeparator   );  //     \
+    	jarPath = getJarLaunchPath();   /*file:/C:/Java/Z_Jar_getPath/target/Z_Jar_getPath-1.0-jar-with-dependencies.jar */    
+ 
+ 
+ 	//copyDirectory(Main.class.getClassLoader().getResource("baseDocsInit/").getPath(), "/");
+    	File fileDestination = new File("./activeDocs/");
+    	URL url = new URL("jar:file:" + jarPath.toString() + "/Z_Jar_getPath-1.0-jar-with-dependencies.jar!/baseDocsInit/");
+    	JarURLConnection jarConnection = (JarURLConnection)url.openConnection();
+    	
+    	FileUtils.copyJarResourcesRecursively(fileDestination, jarConnection);
+    //copyDirectory(jarPath.toString() + "/Z_Jar_getPath-1.0-jar-with-dependencies.jar/baseDocsInit", "./activeDocs/");
+ 
+ System.out.println(jarPath.toString()  );
+ System.out.println("our separator is : " + fileSeparator   );  //     \
  
 
         
@@ -115,7 +128,7 @@ public class Main {
                     if (e == null) {
                         break;
                     }
-                    String name = e.getName();       System.out.println("name: " + name + "  fileName + /: " + fileName + fileSeparator);
+                    String name = e.getName();       //System.out.println("name: " + name + "  fileName + /: " + fileName + fileSeparator);
 
                     if (name.equals(fileName + "/")) { //we have found baseDocsInit !!!
 
@@ -125,7 +138,7 @@ public class Main {
                         System.out.println("baseDocsInit to String " + baseDocsInit.toString());
 
              //HERE IS THE ISSUE ***********                                                   
-                      copyFromJar( "baseDocsInit/" ,  Paths.get("./activeDocs/"));                      
+                      copyFromJar( baseDocsInit.toString() ,  Paths.get("/activeDocs/"));                      
                               
           //            copyDirectory(fileName + fileSeparator, ACTIVEDOCS + fileSeparator);
 
@@ -152,7 +165,29 @@ public class Main {
     
     //copyFromJar("/path/to/the/template/in/jar", Paths.get("/tmp/from-jar"))
     public static void copyFromJar(String source, final Path target) throws URISyntaxException, IOException {
-    URI resource = Main.class.getClassLoader().getResource("").toURI();
+    	System.out.println(source);
+    	System.out.println(target);
+    	System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+    	
+    	System.out.println(Main.class.getClassLoader().getResource("/activeDocs/").toURI());
+    	
+    	
+    	System.out.println(Main.class.getProtectionDomain()
+                .getCodeSource()
+                .getLocation()
+                .toURI()
+                .getPath());
+    	String jjarpath = Main.class.getProtectionDomain()
+                .getCodeSource()
+                .getLocation()
+                .toURI()
+                .getPath();
+    	
+    	System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+    URI resource = Main.class.getClassLoader().getResource(jjarpath + '!' + target).toURI();
+    
+    
+    
     FileSystem fileSystem = FileSystems.newFileSystem(
             resource,
             Collections.<String, String>emptyMap()
@@ -166,6 +201,9 @@ public class Main {
 
         @Override
         public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+        	System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+        	System.out.println(jarPath.relativize(dir).toString());
+        	System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
             currentTarget = target.resolve(jarPath.relativize(dir).toString());
             Files.createDirectories(currentTarget);
             return FileVisitResult.CONTINUE;
@@ -229,18 +267,19 @@ public class Main {
 
     
     public static void copyDirectory(String sourceDirectoryLocation, String destinationDirectoryLocation) 
-  throws IOException {
-    Files.walk(Paths.get(jarPath+fileSeparator+sourceDirectoryLocation) )
-      .forEach(source -> {
-          Path destination = Paths.get(jarPath+fileSeparator+destinationDirectoryLocation, source.toString()
-            .substring(sourceDirectoryLocation.length()));
-          try {
-              Files.copy(source, destination);
-          } catch (IOException e) {
-              e.printStackTrace();
-          }
-      });
-}
+    		  throws IOException {
+	    Files.walk(Paths.get(sourceDirectoryLocation))
+	      .forEach(source -> {
+	          Path destination = Paths.get(destinationDirectoryLocation, source.toString()
+	            .substring(sourceDirectoryLocation.length()));
+	          try {
+	              Files.copy(source, destination);
+	          } catch (IOException e) {
+	              e.printStackTrace();
+	          }
+	      });
+	}
+
     
     
     
