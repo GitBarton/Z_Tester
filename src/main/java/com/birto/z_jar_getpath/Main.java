@@ -27,108 +27,106 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.apache.commons.io.FileUtils;
 
-
 public class Main {
-    
-  static  String  fileSeparator = System.getProperty("file.separator");
- final static String  BASEDOCSINIT = "baseDocsInit";
- final static String  ACTIVEDOCS = "activeDocs";
- final static String  JOURNAL = "journal";
- final static String  INDEX  = "index"; 
- static String jarPath;
-    
-    
-    
+
+    static String fileSeparator = System.getProperty("file.separator");
+    final static String BASEDOCSINIT = "baseDocsInit";
+    final static String ACTIVEDOCS = "activeDocs";
+    final static String JOURNAL = "journal";
+    final static String INDEX = "index";
+    static String jarPath;
+
     public static void main(String[] args) throws URISyntaxException, IOException {
- 
-  Map<String, String> foldertoAdd = new HashMap<String, String>();
-  foldertoAdd.put(ACTIVEDOCS, jarPath + fileSeparator + ACTIVEDOCS + fileSeparator);
-  foldertoAdd.put(INDEX, jarPath + fileSeparator + INDEX + fileSeparator);
-  foldertoAdd.put(JOURNAL, jarPath + fileSeparator + JOURNAL + fileSeparator);
-  //Debug  //     JOptionPane.showMessageDialog(null, foldertoAdd.get(ACTIVEDOCS) + foldertoAdd.get(INDEX) + foldertoAdd.get(JOURNAL), "activeDocs +  index + journal", 1);       
-        
+
+        Map<String, String> foldertoAdd = new HashMap<String, String>();
+        foldertoAdd.put(ACTIVEDOCS, jarPath + fileSeparator + ACTIVEDOCS + fileSeparator);
+        foldertoAdd.put(INDEX, jarPath + fileSeparator + INDEX + fileSeparator);
+        foldertoAdd.put(JOURNAL, jarPath + fileSeparator + JOURNAL + fileSeparator);
+        //Debug  //     JOptionPane.showMessageDialog(null, foldertoAdd.get(ACTIVEDOCS) + foldertoAdd.get(INDEX) + foldertoAdd.get(JOURNAL), "activeDocs +  index + journal", 1);       
 
 //JarPath
- jarPath = getJarLaunchPath();   /*file:/C:/Java/Z_Jar_getPath/target/Z_Jar_getPath-1.0-jar-with-dependencies.jar */      System.out.println("our separator is : " + fileSeparator   );  //     \
- 
+        jarPath = getJarLaunchPath();
+        /*file:/C:/Java/Z_Jar_getPath/target/Z_Jar_getPath-1.0-jar-with-dependencies.jar */ System.out.println("our separator is : " + fileSeparator);  //     \
 
-        
 //Check the folder outside the JAR exists and need to created: 
-        //ActiveDocs
+       
+//ActiveDocs
         if (!checkfolderExist(ACTIVEDOCS)) // If not existant create it and copy else break. 
-        {   createDir(ACTIVEDOCS);
+        {
+            createDir(ACTIVEDOCS);
             copyBaseDocstoActive("baseDocsInit");  //copy the docs from BaseDocsInit while at it....
         }
 
         //Index   
         if (!checkfolderExist(INDEX)) // If not existant create it and copy else break. 
-        {  createDir(INDEX);
+        {
+            createDir(INDEX);
         }
 
         //journal        
         if (!checkfolderExist(JOURNAL)) // If not existant create it and copy else break. 
-        {   createDir(JOURNAL);
+        {
+            createDir(JOURNAL);
         }
-     
 
-    }      
+    }
 
-    
- public static boolean checkfolderExist (String folderRelPath ) {
-            
-      File directory = new File(folderRelPath + fileSeparator );
-      boolean alreadyExist = directory.exists();       System.out.println("In method checkfolderExist with folderPath to check existen = "+ directory);
-      
-      return alreadyExist; 
- }
- 
+    public static boolean checkfolderExist(String folderRelPath) {
+
+        File directory = new File(folderRelPath + fileSeparator);
+        boolean alreadyExist = directory.exists();
+        System.out.println("In method checkfolderExist with folderPath to check existen = " + directory);
+
+        return alreadyExist;
+    }
+
     public static void createDir(String dirName) {
 
         File directory = new File(dirName + fileSeparator);
         if (!directory.exists()) {
             directory.mkdir();
-            
-            boolean existsDir = Files.isDirectory(directory.toPath());  
-            System.out.println("--------------------------------------------------------------------------------------------- ");
-            System.out.println("Result from test - if directory test dirName Path Exist = "+ dirName + existsDir);
-            System.out.println("--------------------------------------------------------------------------------------------- ");
+            //  boolean existsDir = Files.isDirectory(directory.toPath());
+            /*  System.out.println("--------------------------------------------------------------------------------------------- ");
+            System.out.println("Result from test - if directory test dirName Path Exist = " + dirName + existsDir);
+            System.out.println("--------------------------------------------------------------------------------------------- "); */
         }
     }
-    
 
     public static void copyBaseDocstoActive(String fileName) throws URISyntaxException {
-    
+
         CodeSource src = Main.class.getProtectionDomain().getCodeSource();
 
         if (src != null) {
             ZipInputStream zip = null;
             try {
                 URL jar = src.getLocation();
-                
-         
-                
+
                 System.out.println("Printing Codesource (url jar) location" + jar);
                 zip = new ZipInputStream(jar.openStream());
-               
+
                 while (true) {
                     ZipEntry e = zip.getNextEntry();
                     if (e == null) {
                         break;
                     }
-                    String name = e.getName();       System.out.println("name: " + name + "  fileName + /: " + fileName + fileSeparator);
+                    String name = e.getName();  //   System.out.println("name= " + name + "  fileName + /: " + fileName + fileSeparator);
 
                     if (name.equals(fileName + "/")) { //we have found baseDocsInit !!!
 
-                        URL baseDocsInit = Main.class.getClassLoader().getResource("baseDocsInit/");
-                     
+                        URL baseDocsInit = Main.class.getClassLoader().getResource("baseDocsInit");
+                        File baseDocInitToFile = FileUtils.toFile(baseDocsInit);
+                        System.out.println("baseDocInitToFile= "+baseDocInitToFile);
+                         System.out.println("baseDocInitToFile= "+baseDocInitToFile);
+                       
+                           FileUtils.copyDirectory(baseDocInitToFile, new File(ACTIVEDOCS + fileSeparator));                        
+                        
                         System.out.println("baseDocsInit to path" + baseDocsInit.getPath());
                         System.out.println("baseDocsInit to String " + baseDocsInit.toString());
 
-             //HERE IS THE ISSUE ***********                                                   
-                      copyFromJar( "baseDocsInit/" ,  Paths.get("./activeDocs/"));                      
-                              
-          //            copyDirectory(fileName + fileSeparator, ACTIVEDOCS + fileSeparator);
+                        //HERE IS THE ISSUE ***********                                                   
+                //        copyFromJar("baseDocsInit/", Paths.get("./activeDocs/"));
 
+                        //            copyDirectory(fileName + fileSeparator, ACTIVEDOCS + fileSeparator);
                     }
                 }
             }
@@ -146,72 +144,46 @@ public class Main {
         }
         else {
             System.out.println("ERROR in COPYBASEDOCSTOACTIVEDOCS");
-        }    
+        }
     }
-    
-    
+
     //copyFromJar("/path/to/the/template/in/jar", Paths.get("/tmp/from-jar"))
     public static void copyFromJar(String source, final Path target) throws URISyntaxException, IOException {
-    URI resource = Main.class.getClassLoader().getResource("").toURI();
-    FileSystem fileSystem = FileSystems.newFileSystem(
-            resource,
-            Collections.<String, String>emptyMap()
-    );
+        URI resource = Main.class.getClassLoader().getResource("").toURI();
+        FileSystem fileSystem = FileSystems.newFileSystem(
+              resource,
+              Collections.<String, String>emptyMap()
+        );
 
-    final Path jarPath = fileSystem.getPath(source);
+        final Path jarPath_ = fileSystem.getPath(source);
 
-    Files.walkFileTree(jarPath, new SimpleFileVisitor<Path>() {
+        Files.walkFileTree(jarPath_, new SimpleFileVisitor<Path>() {
 
-        private Path currentTarget;
+            private Path currentTarget;
 
-        @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-            currentTarget = target.resolve(jarPath.relativize(dir).toString());
-            Files.createDirectories(currentTarget);
-            return FileVisitResult.CONTINUE;
-        }
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                currentTarget = target.resolve(jarPath_.relativize(dir).toString());
+                Files.createDirectories(currentTarget);
+                return FileVisitResult.CONTINUE;
+            }
 
-        @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-            Files.copy(file, target.resolve(jarPath.relativize(file).toString()), StandardCopyOption.REPLACE_EXISTING);
-            return FileVisitResult.CONTINUE;
-        }
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.copy(file, target.resolve(jarPath_.relativize(file).toString()), StandardCopyOption.REPLACE_EXISTING);
+                return FileVisitResult.CONTINUE;
+            }
 
-    });
-}
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-     public static String getJarLaunchPath() throws UnsupportedEncodingException {
-      URL url = Main.class.getProtectionDomain().getCodeSource().getLocation();
-      String jarPath = URLDecoder.decode(url.getFile(), "UTF-8");
-      String parentPath = new File(jarPath).getParentFile().getPath();
-      return parentPath;
-   }
-    
-    
-    
+        });
+    }
+
+    public static String getJarLaunchPath() throws UnsupportedEncodingException {
+        URL url = Main.class.getProtectionDomain().getCodeSource().getLocation();
+        jarPath = URLDecoder.decode(url.getFile(), "UTF-8");
+        String parentPath = new File(jarPath).getParentFile().getPath();
+        return parentPath;
+    }
+
     public static Path stringToPath(String str) throws URISyntaxException {
 
 //Util to convert from String to Path for the FSDIrectory.Open
@@ -227,32 +199,21 @@ public class Main {
         return Paths.get(uri);    //Convert the string to a Path
     }
 
-    
-    public static void copyDirectory(String sourceDirectoryLocation, String destinationDirectoryLocation) 
-  throws IOException {
-    Files.walk(Paths.get(jarPath+fileSeparator+sourceDirectoryLocation) )
-      .forEach(source -> {
-          Path destination = Paths.get(jarPath+fileSeparator+destinationDirectoryLocation, source.toString()
-            .substring(sourceDirectoryLocation.length()));
-          try {
-              Files.copy(source, destination);
-          } catch (IOException e) {
-              e.printStackTrace();
-          }
-      });
-}
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    public static void copyDirectory(String sourceDirectoryLocation, String destinationDirectoryLocation)
+          throws IOException {
+          Files.walk(Paths.get(jarPath + fileSeparator + sourceDirectoryLocation))
+              .forEach(source -> {
+                  Path destination = Paths.get(jarPath + fileSeparator + destinationDirectoryLocation, source.toString()
+                        .substring(sourceDirectoryLocation.length()));
+                  try {
+                      Files.copy(source, destination);
+                  }
+                  catch (IOException e) {
+                      e.printStackTrace();
+                  }
+              });
+    }
+
     /*       
        //Make a directory:
        String directoryName = PATH.concat("fakeTest");
@@ -263,10 +224,8 @@ public class Main {
         directory.mkdir();
         // If you require it to make the entire directory path including parents,
         // use directory.mkdirs(); here instead.
-         
-        System.out.println("absoPath:"+directory.getAbsolutePath());
-       
-        String pathU_Dir = System.getProperty("user.dir");      System.out.println("User.Dir = " + pathU_Dir);
+         System.out.println("absoPath:"+directory.getAbsolutePath());
+         String pathU_Dir = System.getProperty("user.dir");      System.out.println("User.Dir = " + pathU_Dir);
             
         
         
@@ -286,7 +245,7 @@ public class Main {
             
             
             //  copierBaseDocstoActiveDocs( , sessionControlleur.session.getpathBaseDocs);
-            //   Path baseDocsPath =  stringToPath("baseDocs");
+            //  Path baseDocsPath =  stringToPath("baseDocs");
             
             
             System.out.println("will print from  stringToPath (\"baseDocsInit\").toString()  " +  stringToPath (BASEDOCSINIT).toString() );
@@ -325,10 +284,5 @@ public class Main {
 
     }
  
-    */
-    
-    
-    
-    
-    
- }
+     */
+}
