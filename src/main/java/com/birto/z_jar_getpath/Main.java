@@ -115,24 +115,19 @@ public class Main {
                     if (e == null) {
                         break;
                     }
-                    String name = e.getName();
-
-                    System.out.println("name: " + name + "  fileName + /: " + fileName + fileSeparator);
+                    String name = e.getName();       System.out.println("name: " + name + "  fileName + /: " + fileName + fileSeparator);
 
                     if (name.equals(fileName + "/")) { //we have found baseDocsInit !!!
 
                         URL baseDocsInit = Main.class.getClassLoader().getResource("baseDocsInit/");
-                        File activeDocs = new File("./activeDocs/");
+                     
                         System.out.println("baseDocsInit to path" + baseDocsInit.getPath());
                         System.out.println("baseDocsInit to String " + baseDocsInit.toString());
 
-             //HERE IS THE ISSUE ***********           
-                      //  FileUtils.copy(baseDocsInit, activeDocs);       System.out.println("this will be copied into ActiveDocs file name: " + name);
-                          copyFromJar( "baseDocsInit/" ,  Paths.get("./activeDocs/"));                      
-              //HERE IS THE ISSUE ***********           
-
-                        /* Do something with this entry. */
-                        copyDirectory(fileName + fileSeparator, ACTIVEDOCS + fileSeparator);
+             //HERE IS THE ISSUE ***********                                                   
+                      copyFromJar( "baseDocsInit/" ,  Paths.get("./activeDocs/"));                      
+                              
+          //            copyDirectory(fileName + fileSeparator, ACTIVEDOCS + fileSeparator);
 
                     }
                 }
@@ -154,9 +149,10 @@ public class Main {
         }    
     }
     
+    
     //copyFromJar("/path/to/the/template/in/jar", Paths.get("/tmp/from-jar"))
-    public void copyFromJar(String source, final Path target) throws URISyntaxException, IOException {
-    URI resource = getClass().getResource("").toURI();
+    public static void copyFromJar(String source, final Path target) throws URISyntaxException, IOException {
+    URI resource = Main.class.getClassLoader().getResource("").toURI();
     FileSystem fileSystem = FileSystems.newFileSystem(
             resource,
             Collections.<String, String>emptyMap()
